@@ -9,5 +9,3 @@ export interface Work {
   title: string;
   author: string;
 }
-
-export type Authors = string[];

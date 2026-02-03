@@ -1,48 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardBody, CardFooter } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { useDisclosure } from '@heroui/modal';
-import { Poem } from '../../shared/types/poetry';
-import PoemModal from './PoemModal';
-import { fetchPoemByTitle } from '../../features/works/application/worksService';
+import React from "react";
+import { Card, CardHeader, CardBody, CardFooter } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { useDisclosure } from "@heroui/modal";
+import { Poem } from "../../shared/types/poetry";
+import PoemModal from "./PoemModal";
 
 interface WorkCardProps {
   work: Poem;
+  fullPoem?: Poem | null;
   isAuthenticated: boolean;
   isFavorite: boolean;
   onToggleFavorite: () => void;
+  onLoadPoem: () => void;
 }
 
 const WorkCard: React.FC<WorkCardProps> = ({
   work,
+  fullPoem,
   isAuthenticated,
   isFavorite,
   onToggleFavorite,
+  onLoadPoem,
 }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [fullPoem, setFullPoem] = useState<Poem | null>(work.lines.length > 0 ? work : null);
-
-  useEffect(() => {
-    const fetchFullPoem = async () => {
-      if (work.lines.length === 0 && !fullPoem) {
-        try {
-          const poems = await fetchPoemByTitle(work.title);
-          if (poems.length > 0) {
-            setFullPoem(poems[0]);
-          }
-        } catch (error) {
-          console.error('No se pudo recuperar el poema.', error);
-        }
-      }
-    };
-    fetchFullPoem();
-  }, [work.title, work.lines.length, fullPoem]);
 
   const handleOpen = () => {
+    onLoadPoem();
     onOpen();
   };
 
-  const displayPoem = fullPoem || work;
+  const poemToShow = fullPoem ?? work;
 
   return (
     <>
@@ -54,10 +41,9 @@ const WorkCard: React.FC<WorkCardProps> = ({
         </CardHeader>
         <CardBody>
           <p className="text-sm text-gray-600 italic">
-            {displayPoem.lines.length > 0
-              ? `"${displayPoem.lines.slice(0, 2).join(' ').substring(0, 100)}..."`
-              : `Poema de  ${work.author}`
-            }
+            {poemToShow.lines.length > 0
+              ? `"${poemToShow.lines.slice(0, 2).join(" ").substring(0, 100)}..."`
+              : `Poema de ${work.author}`}
           </p>
         </CardBody>
         <CardFooter className="flex justify-between">
@@ -67,17 +53,17 @@ const WorkCard: React.FC<WorkCardProps> = ({
           {isAuthenticated && (
             <Button
               size="sm"
-              variant={isFavorite ? 'solid' : 'bordered'}
-              color={isFavorite ? 'secondary' : 'default'}
+              variant={isFavorite ? "solid" : "bordered"}
+              color={isFavorite ? "secondary" : "default"}
               onClick={onToggleFavorite}
             >
-              {isFavorite ? 'No favorito' : 'Favorito'}
+              {isFavorite ? "No favorito" : "Favorito"}
             </Button>
           )}
         </CardFooter>
       </Card>
       <PoemModal
-        poem={fullPoem || work}
+        poem={poemToShow}
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         isAuthenticated={isAuthenticated}
